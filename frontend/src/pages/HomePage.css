@@ -1,0 +1,154 @@
+.home-page {
+  overflow-x: hidden;
+}
+
+.hero-btn {
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.products-grid {
+  margin-top: 2rem;
+}
+
+.no-products {
+  text-align: center;
+  padding: 3rem 0;
+  color: #666;
+}
+
+.no-products p {
+  font-size: 1.1rem;
+}
+
+/* About section */
+.about-section {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.about-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+.about-text {
+  color: #333;
+}
+
+.about-text p {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+  color: #555;
+}
+
+.features {
+  display: flex;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: white;
+  padding: 1rem 1.5rem;
+  border-radius: 25px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+  color: #333;
+}
+
+.feature-icon {
+  font-size: 1.5rem;
+}
+
+.about-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.craft-illustration {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.craft-illustration span {
+  font-size: 3rem;
+  text-align: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 15px;
+  transition: transform 0.3s ease;
+}
+
+.craft-illustration span:hover {
+  transform: scale(1.1);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .about-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .features {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .feature {
+    justify-content: center;
+  }
+  
+  .craft-illustration {
+    grid-template-columns: 1fr 1fr;
+    padding: 1.5rem;
+  }
+  
+  .craft-illustration span {
+    font-size: 2.5rem;
+    padding: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero h1 {
+    font-size: 2rem;
+  }
+  
+  .hero p {
+    font-size: 0.9rem;
+  }
+  
+  .hero-btn {
+    padding: 12px 24px;
+    font-size: 1rem;
+  }
+  
+  .about-text p {
+    font-size: 1rem;
+  }
+  
+  .craft-illustration {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .craft-illustration span {
+    font-size: 2rem;
+    padding: 0.6rem;
+  }
+}
