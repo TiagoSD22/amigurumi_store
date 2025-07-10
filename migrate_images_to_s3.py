@@ -1,6 +1,6 @@
 """
 Script to migrate sample images to S3 bucket and create products in Django database.
-This script assumes LocalStack is running on localhost:4566.
+This script assumes LocalStack is running on localhost.localstack.cloud:4566.
 """
 
 import os
@@ -108,12 +108,25 @@ PRODUCT_DATA = {
 
 def create_s3_client():
     """Create and configure S3 client for LocalStack."""
+    from botocore.config import Config
+    
+    # Configuration for LocalStack compatibility
+    config = Config(
+        region_name=AWS_REGION,
+        signature_version='s3v4',
+        s3={
+            'addressing_style': 'path'
+        }
+    )
+    
     return boto3.client(
         's3',
         endpoint_url=S3_ENDPOINT_URL,
         aws_access_key_id=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
         region_name=AWS_REGION,
+        config=config,
+        verify=False  # Disable SSL verification for LocalStack
     )
 
 def check_bucket_exists(s3_client):

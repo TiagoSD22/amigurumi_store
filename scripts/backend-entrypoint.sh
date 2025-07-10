@@ -11,10 +11,6 @@ echo "⏳ Waiting for PostgreSQL..."
 echo "⏳ Waiting for LocalStack..."
 ./wait-for-it.sh localstack:4566 --timeout=600 --strict
 
-# Test S3 connectivity
-echo "🧪 Testing S3 connectivity..."
-python /app/scripts/test-s3-connectivity.py || echo "⚠️ S3 connectivity test failed, continuing..."
-
 # Run migrations
 echo "🔧 Running Django migrations..."
 python manage.py migrate

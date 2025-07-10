@@ -23,7 +23,7 @@ $retryCount = 0
 
 while ($retryCount -lt $maxRetries) {
     try {
-        $response = docker-compose exec -T localstack curl -f http://localhost:4566/health 2>$null
+        $response = docker-compose exec -T localstack curl -f http://localhost.localstack.cloud:4566/health 2>$null
         if ($LASTEXITCODE -eq 0) {
             Write-Host "✅ LocalStack is ready!" -ForegroundColor Green
             break
@@ -51,7 +51,7 @@ docker-compose up --build terraform-init
 
 # Step 6: Verify S3 bucket creation
 Write-Host "🧪 Verifying S3 infrastructure..." -ForegroundColor Cyan
-docker-compose exec -T localstack aws --endpoint-url=http://localhost:4566 s3 ls
+docker-compose exec -T localstack aws --endpoint-url=http://localhost.localstack.cloud:4566 s3 ls
 
 # Step 7: Start backend and frontend
 Write-Host "🚀 Starting backend and frontend services..." -ForegroundColor Green
@@ -71,7 +71,7 @@ Write-Host "🧪 Testing service connectivity..." -ForegroundColor Cyan
 # Test LocalStack
 Write-Host "🔍 Testing LocalStack..." -ForegroundColor Gray
 try {
-    $null = Invoke-WebRequest -Uri "http://localhost:4566/health" -UseBasicParsing -TimeoutSec 10
+    $null = Invoke-WebRequest -Uri "http://localhost.localstack.cloud:4566/health" -UseBasicParsing -TimeoutSec 10
     Write-Host "✅ LocalStack is accessible" -ForegroundColor Green
 }
 catch {
@@ -105,7 +105,7 @@ Write-Host "📱 Access your application:" -ForegroundColor Cyan
 Write-Host "   Frontend: http://localhost:3000" -ForegroundColor White
 Write-Host "   Backend API: http://localhost:8000/api/" -ForegroundColor White
 Write-Host "   Django Admin: http://localhost:8000/admin/ (admin/admin123)" -ForegroundColor White
-Write-Host "   LocalStack: http://localhost:4566" -ForegroundColor White
+Write-Host "   LocalStack: http://localhost.localstack.cloud:4566" -ForegroundColor White
 Write-Host ""
 Write-Host "🔧 To check logs:" -ForegroundColor Cyan
 Write-Host "   docker-compose logs [service_name]" -ForegroundColor White

@@ -1,4 +1,4 @@
-FROM localstack/localstack:3.0
+FROM localstack/localstack:4.6.0
 
 # Install Terraform and AWS CLI
 RUN apt-get update && apt-get install -y \

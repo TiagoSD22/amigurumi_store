@@ -157,9 +157,9 @@ CORS_ALLOW_CREDENTIALS = True
 # AWS S3 Settings for LocalStack
 AWS_ACCESS_KEY_ID = 'test'
 AWS_SECRET_ACCESS_KEY = 'test'
-AWS_S3_ENDPOINT_URL = 'http://localhost:4566'  # LocalStack endpoint
+AWS_S3_ENDPOINT_URL = 'http://localhost.localstack.cloud:4566'  # LocalStack endpoint
 AWS_S3_BUCKET_NAME = 'product-image-collection'
-AWS_S3_BASE_URL = 'http://localhost:4566'
+AWS_S3_BASE_URL = 'http://localhost.localstack.cloud:4566'
 AWS_S3_REGION_NAME = 'us-east-1'
 AWS_DEFAULT_ACL = 'public-read'
 
@@ -176,7 +176,7 @@ USE_S3 = True
 
 if USE_S3:
     # Tell django-storages the domain to use to refer to static files.
-    AWS_S3_CUSTOM_DOMAIN = f'localhost:4566/{AWS_S3_BUCKET_NAME}'
+    AWS_S3_CUSTOM_DOMAIN = f'localhost.localstack.cloud:4566/{AWS_S3_BUCKET_NAME}'
     AWS_S3_OBJECT_PARAMETERS = {
         'CacheControl': 'max-age=86400',
     }

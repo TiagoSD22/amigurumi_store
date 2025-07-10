@@ -26,7 +26,6 @@ COPY backend/ /app/
 # Copy migration script and utilities
 COPY migrate_images_to_s3.py /app/
 COPY scripts/wait-for-it.sh /app/
-COPY scripts/test-s3-connectivity.py /app/scripts/
 RUN chmod +x /app/wait-for-it.sh
 
 # Create directory for static files

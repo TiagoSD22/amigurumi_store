@@ -32,5 +32,5 @@ class AmigurumiProduct(models.Model):
         """Generate full S3 URL for the product image"""
         from django.conf import settings
         bucket_name = getattr(settings, 'AWS_S3_BUCKET_NAME', 'product-image-collection')
-        s3_base_url = getattr(settings, 'AWS_S3_BASE_URL', 'http://localhost:4566')
+        s3_base_url = getattr(settings, 'AWS_S3_BASE_URL', 'http://localhost.localstack.cloud:4566')
         return f"{s3_base_url}/{bucket_name}/{self.id}/{self.image_s3_path}"

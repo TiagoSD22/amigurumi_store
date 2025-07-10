@@ -23,7 +23,7 @@ max_retries=60
 retry_count=0
 
 while [ $retry_count -lt $max_retries ]; do
-    if docker-compose exec -T localstack curl -f http://localhost:4566/health > /dev/null 2>&1; then
+    if docker-compose exec -T localstack curl -f http://localhost.localstack.cloud:4566/health > /dev/null 2>&1; then
         echo "✅ LocalStack is ready!"
         break
     fi
@@ -45,7 +45,7 @@ docker-compose up --build terraform-init
 
 # Step 6: Verify S3 bucket creation
 echo "🧪 Verifying S3 infrastructure..."
-docker-compose exec -T localstack aws --endpoint-url=http://localhost:4566 s3 ls
+docker-compose exec -T localstack aws --endpoint-url=http://localhost.localstack.cloud:4566 s3 ls
 
 # Step 7: Start backend and frontend
 echo "🚀 Starting backend and frontend services..."
@@ -64,7 +64,7 @@ echo "🧪 Testing service connectivity..."
 
 # Test LocalStack
 echo "🔍 Testing LocalStack..."
-if curl -f http://localhost:4566/health > /dev/null 2>&1; then
+if curl -f http://localhost.localstack.cloud:4566/health > /dev/null 2>&1; then
     echo "✅ LocalStack is accessible"
 else
     echo "❌ LocalStack is not accessible"
@@ -93,7 +93,7 @@ echo "📱 Access your application:"
 echo "   Frontend: http://localhost:3000"
 echo "   Backend API: http://localhost:8000/api/"
 echo "   Django Admin: http://localhost:8000/admin/ (admin/admin123)"
-echo "   LocalStack: http://localhost:4566"
+echo "   LocalStack: http://localhost.localstack.cloud:4566"
 echo ""
 echo "🔧 To check logs:"
 echo "   docker-compose logs [service_name]"

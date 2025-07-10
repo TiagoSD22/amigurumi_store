@@ -57,7 +57,7 @@ services:
 
   # Terraform initialization (runs after LocalStack is ready)
   terraform-init:
-    image: hashicorp/terraform:latest
+    image: alpine:latest
     container_name: amigurumi_terraform_init
     volumes:
       - ./terraform:/workspace
@@ -74,6 +74,13 @@ services:
       - default
     command: >
       sh -c "
+        echo 'Installing required tools...' &&
+        apk add --no-cache curl wget unzip aws-cli &&
+        echo 'Installing Terraform...' &&
+        wget -q https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip &&
+        unzip terraform_1.6.0_linux_amd64.zip &&
+        mv terraform /usr/local/bin/ &&
+        rm terraform_1.6.0_linux_amd64.zip &&
         echo 'Waiting for LocalStack to be ready...' &&
         sleep 10 &&
         echo 'Testing LocalStack connectivity...' &&
@@ -87,7 +94,6 @@ services:
         terraform apply -auto-approve &&
         echo 'Infrastructure setup completed!' &&
         echo 'Listing S3 buckets:' &&
-        apk add --no-cache aws-cli &&
         aws --endpoint-url=http://localstack:4566 s3 ls
       "
 

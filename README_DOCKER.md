@@ -40,7 +40,7 @@ cd amigurumi_store
 - **Backend API**: http://localhost:8000/api/products/
 - **Django Admin**: http://localhost:8000/admin/ (admin/admin123)
 - **Database**: localhost:5432 (postgres/postgres)
-- **LocalStack**: http://localhost:4566
+- **LocalStack**: http://localhost.localstack.cloud:4566
 
 ## 📦 Services
 
@@ -190,7 +190,7 @@ docker-compose exec db psql -U postgres -d amigurumi_store
 ### S3/LocalStack issues
 ```bash
 # Check LocalStack health
-curl http://localhost:4566/health
+curl http://localhost.localstack.cloud:4566/health
 
 # List S3 buckets
 docker-compose exec backend python -c "

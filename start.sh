@@ -30,7 +30,7 @@ echo "Waiting for database..."
 timeout 60 bash -c 'until docker-compose exec -T db pg_isready -U postgres; do sleep 2; done'
 
 echo "Waiting for LocalStack..."
-timeout 120 bash -c 'until curl -s http://localhost:4566/health > /dev/null; do sleep 2; done'
+timeout 120 bash -c 'until curl -s http://localhost.localstack.cloud:4566/health > /dev/null; do sleep 2; done'
 
 echo "Waiting for backend..."
 timeout 120 bash -c 'until curl -s http://localhost:8000/api/products/ > /dev/null; do sleep 2; done'
@@ -46,7 +46,7 @@ echo "📱 Frontend:     http://localhost:3000"
 echo "🔧 Backend API:  http://localhost:8000/api/products/"
 echo "👤 Django Admin: http://localhost:8000/admin/ (admin/admin123)"
 echo "🗄️  Database:    localhost:5432 (postgres/postgres)"
-echo "☁️  LocalStack:  http://localhost:4566"
+echo "☁️  LocalStack:  http://localhost.localstack.cloud:4566"
 echo ""
 echo "📋 Available commands:"
 echo "  docker-compose logs -f [service]  # View logs"
