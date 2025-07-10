@@ -13,13 +13,13 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), 'backend'))
 
 # Setup Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'amigurumi_store.settings')
 django.setup()
 
 from products.models import AmigurumiProduct
 
 # S3 Configuration for LocalStack
-S3_ENDPOINT_URL = 'http://localhost:4566'
+S3_ENDPOINT_URL = os.environ.get('AWS_S3_ENDPOINT_URL', 'http://localhost:4566')
 S3_BUCKET_NAME = 'product-image-collection'
 AWS_ACCESS_KEY_ID = 'test'
 AWS_SECRET_ACCESS_KEY = 'test'

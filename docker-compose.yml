@@ -1,0 +1,159 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: amigurumi_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: amigurumi_store
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # LocalStack with S3 and Terraform
+  localstack:
+    build:
+      context: .
+      dockerfile: infrastructure/Dockerfile
+    container_name: amigurumi_localstack
+    restart: unless-stopped
+    ports:
+      - "4566:4566"
+      - "4510-4559:4510-4559"
+    environment:
+      - SERVICES=s3
+      - DEBUG=1
+      - DATA_DIR=/var/lib/localstack
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - LOCALSTACK_HOST=localstack
+      - TMPDIR=/var/lib/localstack/tmp
+      - PERSISTENCE=1
+      - LEGACY_DIRECTORIES=1
+      - S3_SKIP_SIGNATURE_VALIDATION=1
+      - DISABLE_CORS_CHECKS=1
+      - FORCE_NONINTERACTIVE=1
+      - DISABLE_EVENTS=1
+      - S3_DIR=/var/lib/localstack/s3
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+
+  # Terraform initialization (runs after LocalStack is ready)
+  terraform-init:
+    image: hashicorp/terraform:latest
+    container_name: amigurumi_terraform_init
+    volumes:
+      - ./terraform:/workspace
+    working_dir: /workspace
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+      - TF_LOG=INFO
+    depends_on:
+      localstack:
+        condition: service_healthy
+    networks:
+      - default
+    command: >
+      sh -c "
+        echo 'Waiting for LocalStack to be ready...' &&
+        sleep 10 &&
+        echo 'Testing LocalStack connectivity...' &&
+        wget -q --spider http://localstack:4566/health || exit 1 &&
+        echo 'LocalStack is accessible!' &&
+        echo 'Initializing Terraform...' &&
+        terraform init &&
+        echo 'Planning Terraform changes...' &&
+        terraform plan &&
+        echo 'Applying Terraform configuration...' &&
+        terraform apply -auto-approve &&
+        echo 'Infrastructure setup completed!' &&
+        echo 'Listing S3 buckets:' &&
+        apk add --no-cache aws-cli &&
+        aws --endpoint-url=http://localstack:4566 s3 ls
+      "
+
+  # Django Backend
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: amigurumi_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DOCKER_ENV=1
+      - POSTGRES_DB=amigurumi_store
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - AWS_S3_ENDPOINT_URL=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    volumes:
+      - static_files:/app/staticfiles
+      - media_files:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      terraform-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/products/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # React Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: amigurumi_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  localstack_data:
+    driver: local
+  static_files:
+    driver: local
+  media_files:
+    driver: local
+
+networks:
+  default:
+    name: amigurumi_network

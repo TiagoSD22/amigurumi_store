@@ -10,8 +10,6 @@ from pathlib import Path
 current_dir = Path(__file__).resolve().parent
 sys.path.append(str(current_dir))
 
-# Set the Django settings module
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'amigurumi_store.settings')
 
 # Setup Django
 django.setup()
