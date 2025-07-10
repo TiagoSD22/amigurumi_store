@@ -40,6 +40,10 @@
 .social-link {
   display: inline-block;
   font-size: 1.5rem;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
   text-decoration: none;
   transition: transform 0.3s ease;
 }
@@ -70,6 +74,23 @@
 }
 
 .footer-links a:hover {
+  color: #3498db;
+}
+
+.footer-link-btn {
+  background: none;
+  border: none;
+  color: #bdc3c7;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+  text-align: left;
+  padding: 0;
+}
+
+.footer-link-btn:hover {
   color: #3498db;
 }
 

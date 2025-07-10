@@ -22,9 +22,7 @@ services:
 
   # LocalStack with S3 and Terraform
   localstack:
-    build:
-      context: .
-      dockerfile: infrastructure/Dockerfile
+    image: localstack/localstack:3.0
     container_name: amigurumi_localstack
     restart: unless-stopped
     ports:
@@ -34,7 +32,6 @@ services:
       - SERVICES=s3
       - DEBUG=1
       - DATA_DIR=/var/lib/localstack
-      - DOCKER_HOST=unix:///var/run/docker.sock
       - LOCALSTACK_HOST=localstack
       - TMPDIR=/var/lib/localstack/tmp
       - PERSISTENCE=1
@@ -43,15 +40,15 @@ services:
       - DISABLE_CORS_CHECKS=1
       - FORCE_NONINTERACTIVE=1
       - DISABLE_EVENTS=1
-      - S3_DIR=/var/lib/localstack/s3
+      - EAGER_SERVICE_LOADING=1
     volumes:
       - localstack_data:/var/lib/localstack
-      - /var/run/docker.sock:/var/run/docker.sock
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4566/health"]
       interval: 30s
       timeout: 10s
-      retries: 5
+      retries: 10
+      start_period: 30s
     tmpfs:
       - /tmp:noexec,nosuid,size=100m
 
@@ -81,11 +78,17 @@ services:
         unzip terraform_1.6.0_linux_amd64.zip &&
         mv terraform /usr/local/bin/ &&
         rm terraform_1.6.0_linux_amd64.zip &&
-        echo 'Waiting for LocalStack to be ready...' &&
-        sleep 10 &&
-        echo 'Testing LocalStack connectivity...' &&
-        wget -q --spider http://localstack:4566/health || exit 1 &&
-        echo 'LocalStack is accessible!' &&
+        echo 'Waiting extra time for LocalStack S3 service...' &&
+        sleep 20 &&
+        echo 'Testing LocalStack S3 connectivity...' &&
+        for i in \$(seq 1 10); do
+          if aws --endpoint-url=http://localstack:4566 s3 ls 2>/dev/null; then
+            echo 'S3 service is ready!'
+            break
+          fi
+          echo \"Attempt \$i: S3 not ready, waiting...\"
+          sleep 5
+        done &&
         echo 'Initializing Terraform...' &&
         terraform init &&
         echo 'Planning Terraform changes...' &&

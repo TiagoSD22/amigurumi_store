@@ -157,9 +157,9 @@ CORS_ALLOW_CREDENTIALS = True
 # AWS S3 Settings for LocalStack
 AWS_ACCESS_KEY_ID = 'test'
 AWS_SECRET_ACCESS_KEY = 'test'
-AWS_S3_ENDPOINT_URL = 'http://localhost.localstack.cloud:4566'  # LocalStack endpoint
+AWS_S3_ENDPOINT_URL = 'http://localhost:4566'  # LocalStack endpoint
 AWS_S3_BUCKET_NAME = 'product-image-collection'
-AWS_S3_BASE_URL = 'http://localhost.localstack.cloud:4566'
+AWS_S3_BASE_URL = 'http://localhost:4566'
 AWS_S3_REGION_NAME = 'us-east-1'
 AWS_DEFAULT_ACL = 'public-read'
 
@@ -174,16 +174,25 @@ AWS_S3_FILE_OVERWRITE = False
 # Use S3 for media files in development with LocalStack
 USE_S3 = True
 
+# Check if we should disable S3 for static files (fallback mechanism)
+USE_S3_FOR_STATIC = os.environ.get('USE_S3_FOR_STATIC', 'true').lower() == 'true'
+
 if USE_S3:
     # Tell django-storages the domain to use to refer to static files.
-    AWS_S3_CUSTOM_DOMAIN = f'localhost.localstack.cloud:4566/{AWS_S3_BUCKET_NAME}'
+    AWS_S3_CUSTOM_DOMAIN = f'localhost:4566/{AWS_S3_BUCKET_NAME}'
     AWS_S3_OBJECT_PARAMETERS = {
         'CacheControl': 'max-age=86400',
     }
     
     # Configure storage backends
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'
+    
+    # Only use S3 for static files if not disabled
+    if USE_S3_FOR_STATIC:
+        STATICFILES_STORAGE = 'storages.backends.s3boto3.S3StaticStorage'
+    else:
+        # Fall back to local static files storage
+        STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # Docker-specific configuration
 if os.environ.get('DOCKER_ENV'):

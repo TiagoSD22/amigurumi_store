@@ -31,10 +31,6 @@ else:
 echo "📁 Migrating images to S3 and populating database..."
 python migrate_images_to_s3.py || echo "⚠️ S3 migration failed, continuing with local setup..."
 
-# Collect static files
-echo "📦 Collecting static files..."
-python manage.py collectstatic --noinput
-
 # Start Django development server
 echo "✅ Starting Django server..."
 exec python manage.py runserver 0.0.0.0:8000

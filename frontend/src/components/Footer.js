@@ -15,9 +15,9 @@ const Footer = () => {
               Handcrafted amigurumi toys made with love and care. Each piece is unique and created with the finest materials.
             </p>
             <div className="social-links">
-              <a href="#" className="social-link">📘</a>
-              <a href="#" className="social-link">📷</a>
-              <a href="#" className="social-link">🐦</a>
+              <button type="button" className="social-link" aria-label="Facebook">📘</button>
+              <button type="button" className="social-link" aria-label="Instagram">📷</button>
+              <button type="button" className="social-link" aria-label="Twitter">🐦</button>
             </div>
           </div>
           
@@ -35,10 +35,10 @@ const Footer = () => {
           <div className="footer-section">
             <h4 className="footer-subtitle">Customer Service</h4>
             <ul className="footer-links">
-              <li><a href="#contact">Contact Us</a></li>
-              <li><a href="#shipping">Shipping Info</a></li>
-              <li><a href="#returns">Returns</a></li>
-              <li><a href="#faq">FAQ</a></li>
+              <li><button type="button" className="footer-link-btn">Contact Us</button></li>
+              <li><button type="button" className="footer-link-btn">Shipping Info</button></li>
+              <li><button type="button" className="footer-link-btn">Returns</button></li>
+              <li><button type="button" className="footer-link-btn">FAQ</button></li>
             </ul>
           </div>
           
