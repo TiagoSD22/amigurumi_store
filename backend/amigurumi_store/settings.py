@@ -206,3 +206,15 @@ if os.environ.get('DOCKER_ENV'):
         "http://frontend:3000",
         "http://localhost:3000",
     ]
+
+# Cache configuration
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+
+# S3 Image Service settings
+S3_PRESIGNED_URL_CACHE_TIMEOUT = 3600  # 1 hour
+S3_PRESIGNED_URL_EXPIRATION = 3600  # 1 hour

@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.functional import cached_property
 
 class AmigurumiProduct(models.Model):
     """Model for Amigurumi products"""
@@ -15,7 +16,6 @@ class AmigurumiProduct(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='ANIMAL')
-    image_s3_path = models.CharField(max_length=500, help_text="S3 path to the product image")
     is_featured = models.BooleanField(default=False)
     is_available = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -27,10 +27,32 @@ class AmigurumiProduct(models.Model):
     def __str__(self):
         return self.name
     
+    @cached_property
+    def images(self):
+        """
+        Get all images for this product from S3 with presigned URLs
+        This is a lazy property that will be cached per request
+        """
+        from .services import S3ImageService
+        
+        service = S3ImageService()
+        return service.get_product_images(self.id)
+    
     @property
-    def image_url(self):
-        """Generate full S3 URL for the product image"""
-        from django.conf import settings
-        bucket_name = getattr(settings, 'AWS_S3_BUCKET_NAME', 'product-image-collection')
-        s3_base_url = getattr(settings, 'AWS_S3_BASE_URL', 'http://localhost.localstack.cloud:4566')
-        return f"{s3_base_url}/{bucket_name}/{self.id}/{self.image_s3_path}"
+    def primary_image(self):
+        """Get the first image as the primary image"""
+        images = self.images
+        if images:
+            return images[0]
+        return None
+    
+    def invalidate_image_cache(self):
+        """Invalidate the cached images for this product"""
+        from .services import S3ImageService
+        
+        service = S3ImageService()
+        service.invalidate_product_cache(self.id)
+        
+        # Also clear the cached_property
+        if hasattr(self, '_images'):
+            delattr(self, '_images')
