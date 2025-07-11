@@ -204,3 +204,82 @@ The service includes comprehensive error handling:
 - Cache errors
 
 All errors are logged appropriately and don't break the application flow.
+
+## S3 Data Persistence
+
+### LocalStack Persistence Configuration
+
+The LocalStack container is configured with persistent storage to ensure S3 data survives container restarts:
+
+```yaml
+# docker-compose.yml
+localstack:
+  environment:
+    - PERSISTENCE=1
+    - DATA_DIR=/var/lib/localstack/data
+    - S3_DIR=/var/lib/localstack/data/s3
+  volumes:
+    - localstack_data:/var/lib/localstack/data
+```
+
+### Testing Persistence
+
+Use the provided scripts to test S3 data persistence:
+
+**Python Script:**
+```bash
+# List buckets and objects
+python scripts/test_s3_persistence.py
+
+# Upload a test file
+python scripts/test_s3_persistence.py upload
+```
+
+**PowerShell Script (Windows):**
+```powershell
+# List buckets and objects
+.\scripts\test_s3_persistence.ps1 list
+
+# Upload a test file
+.\scripts\test_s3_persistence.ps1 upload
+```
+
+### Persistence Test Workflow
+
+1. Start services and upload some images:
+   ```bash
+   docker-compose up -d
+   # Upload some product images via the API
+   ```
+
+2. Stop containers:
+   ```bash
+   docker-compose down
+   ```
+
+3. Restart containers:
+   ```bash
+   docker-compose up -d
+   ```
+
+4. Verify data persisted:
+   ```bash
+   python scripts/test_s3_persistence.py
+   ```
+
+### Volume Management
+
+To completely reset S3 data:
+```bash
+docker-compose down -v  # Removes named volumes
+docker volume prune     # Clean up unused volumes
+```
+
+To backup S3 data:
+```bash
+# Create a backup of the LocalStack volume
+docker run --rm -v amigurumi_store_localstack_data:/data -v $(pwd):/backup alpine tar czf /backup/localstack_backup.tar.gz -C /data .
+
+# Restore from backup
+docker run --rm -v amigurumi_store_localstack_data:/data -v $(pwd):/backup alpine tar xzf /backup/localstack_backup.tar.gz -C /data
+```

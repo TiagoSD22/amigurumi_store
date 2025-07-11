@@ -33,26 +33,29 @@ services:
     environment:
       - SERVICES=s3
       - DEBUG=1
-      - DATA_DIR=/var/lib/localstack
+      - DATA_DIR=/var/lib/localstack/data
       - LOCALSTACK_HOST=localstack
-      - TMPDIR=/var/lib/localstack/tmp
       - PERSISTENCE=1
-      - LEGACY_DIRECTORIES=1
+      - LAMBDA_IGNORE_ARCHITECTURE=1
       - S3_SKIP_SIGNATURE_VALIDATION=1
       - DISABLE_CORS_CHECKS=1
       - FORCE_NONINTERACTIVE=1
       - DISABLE_EVENTS=1
       - EAGER_SERVICE_LOADING=1
+      # Ensure S3 persistence settings
+      - S3_DIR=/var/lib/localstack/data/s3
+      - S3_SKIP_KMS_VALIDATION=1
     volumes:
-      - localstack_data:/var/lib/localstack
+      # Persistent volume for LocalStack data including S3 files
+      - localstack_data:/var/lib/localstack/data
+      # Optional: Mount a local directory for easier access/backup
+      # - ./localstack-data:/var/lib/localstack/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4566/health"]
       interval: 30s
       timeout: 10s
       retries: 10
       start_period: 30s
-    tmpfs:
-      - /tmp:noexec,nosuid,size=100m
 
   # Terraform initialization (runs after LocalStack is ready)
   terraform-init:
