@@ -5,6 +5,7 @@ from django.core.cache import cache
 from datetime import datetime, timedelta
 from typing import List, Optional
 from botocore.exceptions import ClientError, NoCredentialsError
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,7 @@ class S3ImageService:
         self.bucket_name = getattr(settings, 'AWS_S3_BUCKET_NAME', 'product-image-collection')
         self.cache_timeout = getattr(settings, 'S3_PRESIGNED_URL_CACHE_TIMEOUT', 3600)  # 1 hour
         self.presigned_url_expiration = getattr(settings, 'S3_PRESIGNED_URL_EXPIRATION', 3600)  # 1 hour
+        self.default_image_key = getattr(settings, 'S3_DEFAULT_IMAGE_KEY', 'image_not_found.png')
         self.s3_client = self._get_s3_client()
     
     def _get_s3_client(self):
@@ -92,7 +94,8 @@ class S3ImageService:
                     'url': presigned_url,
                     'filename': filename,
                     'key': key,
-                    'expires_at': datetime.now() + timedelta(seconds=self.presigned_url_expiration)
+                    'expires_at': datetime.now() + timedelta(seconds=self.presigned_url_expiration),
+                    'is_default': False
                 })
             except ClientError as e:
                 logger.error(f"Error generating presigned URL for {key}: {e}")
@@ -120,26 +123,31 @@ class S3ImageService:
         
         return True
     
-    def get_product_images(self, product_id: int) -> List[dict]:
+    def get_product_images(self, product_id: int, force_refresh: bool = False) -> List[dict]:
         """
-        Get product images with caching
+        Get product images with caching. If no images exist, return default image.
         
         Args:
             product_id: The ID of the product
+            force_refresh: If True, bypass cache and fetch fresh data from S3
             
         Returns:
             List of dictionaries containing image data with presigned URLs
         """
         cache_key = self._get_cache_key(product_id)
         
-        # Try to get from cache first
-        cached_data = cache.get(cache_key)
+        # Skip cache if force_refresh is True
+        if not force_refresh:
+            # Try to get from cache first
+            cached_data = cache.get(cache_key)
+            
+            if cached_data and self._is_cache_valid(cached_data):
+                logger.debug(f"Returning cached images for product {product_id}")
+                return cached_data['images']
+        else:
+            logger.debug(f"Force refresh requested for product {product_id}, bypassing cache")
         
-        if cached_data and self._is_cache_valid(cached_data):
-            logger.debug(f"Returning cached images for product {product_id}")
-            return cached_data['images']
-        
-        # Cache miss or expired - fetch from S3
+        # Cache miss, expired, or force refresh - fetch from S3
         logger.debug(f"Fetching images from S3 for product {product_id}")
         
         try:
@@ -147,17 +155,29 @@ class S3ImageService:
             image_keys = self._list_product_images(product_id)
             
             if not image_keys:
-                # Cache empty result to avoid repeated S3 calls
-                cache.set(cache_key, {'images': []}, timeout=300)  # 5 minutes for empty results
-                return []
+                # No images found for this product - use default image
+                logger.debug(f"No images found for product {product_id}, using default image")
+                default_image = self._get_default_image()
+                default_images = [default_image]
+                
+                # Cache the default image result for shorter time
+                cache_data = {
+                    'images': default_images,
+                    'cached_at': datetime.now(),
+                    'is_default': True
+                }
+                
+                cache.set(cache_key, cache_data, timeout=300)  # 5 minutes for default image
+                return default_images
             
-            # Generate presigned URLs
+            # Generate presigned URLs for actual product images
             presigned_urls = self._generate_presigned_urls(image_keys)
             
             # Cache the results
             cache_data = {
                 'images': presigned_urls,
-                'cached_at': datetime.now()
+                'cached_at': datetime.now(),
+                'is_default': False
             }
             
             cache.set(cache_key, cache_data, timeout=self.cache_timeout)
@@ -166,7 +186,13 @@ class S3ImageService:
             
         except Exception as e:
             logger.error(f"Error fetching images for product {product_id}: {e}")
-            return []
+            # Return default image as fallback on error
+            try:
+                default_image = self._get_default_image()
+                return [default_image]
+            except Exception as fallback_error:
+                logger.error(f"Error getting default image as fallback: {fallback_error}")
+                return []
     
     def invalidate_product_cache(self, product_id: int):
         """Invalidate cache for a specific product"""
@@ -234,3 +260,46 @@ class S3ImageService:
         except Exception as e:
             logger.error(f"Error deleting image {filename} for product {product_id}: {e}")
             return False
+    
+    def _get_default_image(self) -> dict:
+        """
+        Generate presigned URL for the default image
+        
+        Returns:
+            Dictionary containing default image data with presigned URL
+        """
+        try:
+            presigned_url = self.s3_client.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': self.bucket_name, 'Key': self.default_image_key},
+                ExpiresIn=self.presigned_url_expiration
+            )
+            
+            return {
+                'url': presigned_url,
+                'filename': self.default_image_key,
+                'key': self.default_image_key,
+                'expires_at': datetime.now() + timedelta(seconds=self.presigned_url_expiration),
+                'is_default': True
+            }
+        except ClientError as e:
+            logger.error(f"Error generating presigned URL for default image {self.default_image_key}: {e}")
+            # Return a fallback structure if default image is not available
+            return {
+                'url': None,
+                'filename': self.default_image_key,
+                'key': self.default_image_key,
+                'expires_at': datetime.now() + timedelta(seconds=self.presigned_url_expiration),
+                'is_default': True,
+                'error': 'Default image not found'
+            }
+        except Exception as e:
+            logger.error(f"Unexpected error generating default image URL: {e}")
+            return {
+                'url': None,
+                'filename': self.default_image_key,
+                'key': self.default_image_key,
+                'expires_at': datetime.now() + timedelta(seconds=self.presigned_url_expiration),
+                'is_default': True,
+                'error': str(e)
+            }
