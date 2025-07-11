@@ -218,3 +218,4 @@ CACHES = {
 # S3 Image Service settings
 S3_PRESIGNED_URL_CACHE_TIMEOUT = 3600  # 1 hour
 S3_PRESIGNED_URL_EXPIRATION = 3600  # 1 hour
+S3_DEFAULT_IMAGE_KEY = 'image_not_found.png'  # Default image in bucket root
