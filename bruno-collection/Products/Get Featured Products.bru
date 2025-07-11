@@ -1,0 +1,51 @@
+meta {
+  name: Get Featured Products
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/products/featured/
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+docs {
+  # Get Featured Products
+  
+  Retrieves only products that are marked as featured and available.
+  
+  ## Response
+  - Returns array of featured products
+  - Only includes products where is_featured=True and is_available=True
+  - Each product includes full image data with presigned URLs
+  - Perfect for homepage displays or promotional sections
+  
+  ## Use Cases
+  - Homepage featured products carousel
+  - Promotional product displays
+  - Marketing campaigns
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Response is an array", function() {
+    expect(res.getBody()).to.be.an('array');
+  });
+  
+  test("All products are featured and available", function() {
+    const products = res.getBody();
+    products.forEach(product => {
+      expect(product.is_featured).to.be.true;
+      expect(product.is_available).to.be.true;
+    });
+  });
+}

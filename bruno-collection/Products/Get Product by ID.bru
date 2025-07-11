@@ -1,0 +1,82 @@
+meta {
+  name: Get Product by ID
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/products/{{productId}}/
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+docs {
+  # Get Product by ID
+  
+  Retrieves a specific product by its ID.
+  
+  ## Parameters
+  - productId: Integer ID of the product (configured in environment variables)
+  
+  ## Response
+  - Returns single product object with images
+  - Images are fetched from S3 with presigned URLs
+  - If product has no images, returns default image_not_found.png
+  - 404 if product not found
+  
+  ## Example Response
+  ```json
+  {
+    "id": 1,
+    "name": "Cute Bear Amigurumi",
+    "description": "Adorable hand-crocheted bear...",
+    "price": "25.99",
+    "category": "ANIMAL",
+    "images": [
+      {
+        "url": "https://s3.../presigned-url",
+        "filename": "bear1.jpg",
+        "key": "1/bear1.jpg",
+        "expires_at": "2025-07-10T15:30:00Z",
+        "is_default": false
+      }
+    ],
+    "primary_image": { ... },
+    "is_featured": true,
+    "is_available": true,
+    "created_at": "2025-01-01T00:00:00Z",
+    "updated_at": "2025-01-01T00:00:00Z"
+  }
+  ```
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Product has correct structure", function() {
+    const product = res.getBody();
+    expect(product).to.have.property('id');
+    expect(product).to.have.property('name');
+    expect(product).to.have.property('images');
+    expect(product.images).to.be.an('array');
+  });
+  
+  test("Product images have required fields", function() {
+    const product = res.getBody();
+    if (product.images && product.images.length > 0) {
+      const image = product.images[0];
+      expect(image).to.have.property('url');
+      expect(image).to.have.property('filename');
+      expect(image).to.have.property('key');
+      expect(image).to.have.property('expires_at');
+      expect(image).to.have.property('is_default');
+    }
+  });
+}

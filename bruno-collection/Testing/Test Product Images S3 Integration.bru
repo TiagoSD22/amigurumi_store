@@ -1,0 +1,97 @@
+meta {
+  name: Test Product Images S3 Integration
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/products/{{productId}}/
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+docs {
+  # Test Product Images S3 Integration
+  
+  Tests the S3 image service integration by checking image data structure and URLs.
+  
+  ## What This Tests
+  - Image array structure
+  - Presigned URL format
+  - Default image handling
+  - Cache behavior
+  - URL expiration data
+  
+  ## Expected Behavior
+  - If product has images: Returns actual product images with presigned URLs
+  - If product has no images: Returns default image (image_not_found.png)
+  - All images should have: url, filename, key, expires_at, is_default fields
+  
+  ## S3 Image Structure
+  - Product images: `s3://product-image-collection/{productId}/image.jpg`
+  - Default image: `s3://product-image-collection/image_not_found.png`
+  
+  ## Troubleshooting
+  - If images array is empty: Check S3 bucket and LocalStack connectivity
+  - If URLs are invalid: Check AWS credentials and endpoint configuration
+  - If default image fails: Ensure image_not_found.png exists in bucket root
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Product has images array", function() {
+    const product = res.getBody();
+    expect(product).to.have.property('images');
+    expect(product.images).to.be.an('array');
+    expect(product.images.length).to.be.greaterThan(0);
+  });
+  
+  test("Images have required structure", function() {
+    const product = res.getBody();
+    const image = product.images[0];
+    expect(image).to.have.property('url');
+    expect(image).to.have.property('filename');
+    expect(image).to.have.property('key');
+    expect(image).to.have.property('expires_at');
+    expect(image).to.have.property('is_default');
+  });
+  
+  test("Image URLs are valid", function() {
+    const product = res.getBody();
+    product.images.forEach(image => {
+      expect(image.url).to.be.a('string');
+      expect(image.url).to.include('http');
+      if (image.url) {
+        expect(image.url.length).to.be.greaterThan(10);
+      }
+    });
+  });
+  
+  test("Primary image exists", function() {
+    const product = res.getBody();
+    expect(product).to.have.property('primary_image');
+    if (product.primary_image) {
+      expect(product.primary_image).to.have.property('url');
+      expect(product.primary_image).to.have.property('filename');
+    }
+  });
+  
+  test("Image expiration is in future", function() {
+    const product = res.getBody();
+    const now = new Date();
+    product.images.forEach(image => {
+      if (image.expires_at) {
+        const expiresAt = new Date(image.expires_at);
+        expect(expiresAt.getTime()).to.be.greaterThan(now.getTime());
+      }
+    });
+  });
+}

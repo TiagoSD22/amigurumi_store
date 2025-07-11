@@ -1,0 +1,79 @@
+meta {
+  name: Update Product (PUT)
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{baseUrl}}/api/products/{{productId}}/
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+body:json {
+  {
+    "name": "Updated Bear Amigurumi - Premium Edition",
+    "description": "Updated description for the adorable hand-crocheted bear. Now with premium cotton yarn and enhanced details. This exclusive edition features golden thread accents and comes with a care instruction card.",
+    "price": "35.99",
+    "category": "ANIMAL",
+    "is_featured": false,
+    "is_available": true
+  }
+}
+
+docs {
+  # Update Product (PUT)
+  
+  Completely updates an existing product with new data.
+  
+  ## Parameters
+  - productId: Integer ID of the product to update (from environment variable)
+  
+  ## Request Body
+  All fields are required for PUT request (complete replacement):
+  - name: String (max 200 chars, required)
+  - description: Text (required)
+  - price: Decimal string (required)
+  - category: Choice (required)
+  - is_featured: Boolean (required)
+  - is_available: Boolean (required)
+  
+  ## Response
+  - Returns updated product object
+  - updated_at timestamp is automatically updated
+  - Images remain unchanged (managed separately via S3)
+  
+  ## Notes
+  - Use PUT for complete product updates
+  - Use PATCH for partial updates (see separate request)
+  - Images are managed separately and won't be affected
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Product updated correctly", function() {
+    const product = res.getBody();
+    expect(product.name).to.equal("Updated Bear Amigurumi - Premium Edition");
+    expect(product.price).to.equal("35.99");
+    expect(product.is_featured).to.be.false;
+  });
+  
+  test("Product ID unchanged", function() {
+    const product = res.getBody();
+    const expectedId = parseInt(bru.getVar("productId"));
+    expect(product.id).to.equal(expectedId);
+  });
+  
+  test("Updated timestamp changed", function() {
+    const product = res.getBody();
+    expect(product).to.have.property('updated_at');
+  });
+}

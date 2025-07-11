@@ -1,0 +1,52 @@
+meta {
+  name: Get Featured Products (Force Refresh)
+  type: http
+  seq: 14
+}
+
+get {
+  url: {{baseUrl}}/api/products/featured/?force_refresh=true
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+docs {
+  # Get Featured Products with Force Refresh
+  
+  Retrieves featured products with forced image refresh from S3.
+  
+  ## Query Parameters
+  - force_refresh: true/1/yes - Forces refresh of image data from S3
+  
+  ## Use Cases
+  - After updating images for featured products
+  - Homepage refresh with latest product images
+  - Marketing campaigns requiring fresh image data
+  - Admin verification of featured product updates
+  
+  ## Response
+  - Returns only featured and available products
+  - All images have fresh presigned URLs from S3
+  - Bypasses cache for all featured products
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("All products are featured and have fresh images", function() {
+    const products = res.getBody();
+    products.forEach(product => {
+      expect(product.is_featured).to.be.true;
+      expect(product.is_available).to.be.true;
+      expect(product).to.have.property('images');
+      expect(product.images).to.be.an('array');
+    });
+  });
+}

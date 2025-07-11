@@ -1,0 +1,78 @@
+meta {
+  name: Create Product
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/products/
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+body:json {
+  {
+    "name": "Cute Bear Amigurumi",
+    "description": "Adorable hand-crocheted bear made with soft cotton yarn. Perfect for children and collectors alike. Features embroidered safety eyes and a sweet smile that will melt your heart.",
+    "price": "25.99",
+    "category": "ANIMAL",
+    "is_featured": true,
+    "is_available": true
+  }
+}
+
+docs {
+  # Create Product
+  
+  Creates a new amigurumi product in the store.
+  
+  ## Request Body
+  - name: String (max 200 chars, required) - Product name
+  - description: Text (required) - Detailed product description
+  - price: Decimal string (max 10 digits, 2 decimal places, required) - Product price
+  - category: Choice (required) - One of: ANIMAL, DOLL, CHARACTER, ACCESSORIES, SEASONAL
+  - is_featured: Boolean (optional, default: false) - Whether to feature on homepage
+  - is_available: Boolean (optional, default: true) - Product availability
+  
+  ## Response
+  - Returns created product object with auto-generated ID
+  - Images will be empty array initially (upload images separately)
+  - created_at and updated_at timestamps are auto-generated
+  
+  ## Notes
+  - After creating a product, use the upload script to add images:
+    `python upload_product_images_to_s3.py --product_id={id} --images="image1.jpg image2.jpg"`
+  - Product ID can be used for S3 image organization
+}
+
+tests {
+  test("Status code is 201", function() {
+    expect(res.getStatus()).to.equal(201);
+  });
+  
+  test("Product created with correct data", function() {
+    const product = res.getBody();
+    expect(product).to.have.property('id');
+    expect(product.name).to.equal("Cute Bear Amigurumi");
+    expect(product.category).to.equal("ANIMAL");
+    expect(product.is_featured).to.be.true;
+    expect(product.is_available).to.be.true;
+  });
+  
+  test("Product has required timestamps", function() {
+    const product = res.getBody();
+    expect(product).to.have.property('created_at');
+    expect(product).to.have.property('updated_at');
+  });
+  
+  test("Product has images array", function() {
+    const product = res.getBody();
+    expect(product).to.have.property('images');
+    expect(product.images).to.be.an('array');
+  });
+}

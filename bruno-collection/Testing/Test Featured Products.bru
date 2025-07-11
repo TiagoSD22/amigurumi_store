@@ -1,0 +1,87 @@
+meta {
+  name: Test Featured Products
+  type: http
+  seq: 11
+}
+
+get {
+  url: {{baseUrl}}/api/products/featured/
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+docs {
+  # Test Featured Products
+  
+  Tests the featured products endpoint functionality.
+  
+  ## Expected Behavior
+  - Returns only products where is_featured=true AND is_available=true
+  - Products should be ordered by creation date (newest first)
+  - All products should have complete image data
+  - Should be suitable for homepage displays
+  
+  ## Use Cases
+  - Homepage carousel
+  - Featured products section
+  - Marketing promotions
+  - Product highlights
+  
+  ## Notes
+  - If no products are featured, returns empty array
+  - Products must be both featured AND available to appear
+  - Good for testing product visibility logic
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Response is an array", function() {
+    expect(res.getBody()).to.be.an('array');
+  });
+  
+  test("All products are featured", function() {
+    const products = res.getBody();
+    products.forEach(product => {
+      expect(product.is_featured).to.be.true;
+    });
+  });
+  
+  test("All products are available", function() {
+    const products = res.getBody();
+    products.forEach(product => {
+      expect(product.is_available).to.be.true;
+    });
+  });
+  
+  test("Products have complete data", function() {
+    const products = res.getBody();
+    products.forEach(product => {
+      expect(product).to.have.property('id');
+      expect(product).to.have.property('name');
+      expect(product).to.have.property('description');
+      expect(product).to.have.property('price');
+      expect(product).to.have.property('category');
+      expect(product).to.have.property('images');
+      expect(product).to.have.property('primary_image');
+    });
+  });
+  
+  test("Products are ordered by creation date", function() {
+    const products = res.getBody();
+    if (products.length > 1) {
+      for (let i = 0; i < products.length - 1; i++) {
+        const current = new Date(products[i].created_at);
+        const next = new Date(products[i + 1].created_at);
+        expect(current.getTime()).to.be.greaterThanOrEqual(next.getTime());
+      }
+    }
+  });
+}

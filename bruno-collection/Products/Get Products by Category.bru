@@ -1,0 +1,67 @@
+meta {
+  name: Get Products by Category
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/products/category/{{category}}/
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+docs {
+  # Get Products by Category
+  
+  Retrieves products filtered by category.
+  
+  ## Parameters
+  - category: Product category (case-sensitive, uppercase)
+  
+  ## Available Categories
+  - ANIMAL: Animal-themed amigurumi (bears, cats, dogs, etc.)
+  - DOLL: Doll-style amigurumi (people, characters with human features)
+  - CHARACTER: Character-based amigurumi (cartoon characters, fantasy creatures)
+  - ACCESSORIES: Amigurumi accessories (bags, hats, decorative items)
+  - SEASONAL: Seasonal/holiday themed (Christmas, Halloween, Easter, etc.)
+  
+  ## Response
+  - Returns array of products in the specified category
+  - Only includes available products (is_available=True)
+  - Each product includes full image data with presigned URLs
+  
+  ## Example Usage
+  - Category page displays
+  - Product filtering
+  - Navigation menus
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Response is an array", function() {
+    expect(res.getBody()).to.be.an('array');
+  });
+  
+  test("All products have correct category", function() {
+    const products = res.getBody();
+    const expectedCategory = bru.getVar("category");
+    products.forEach(product => {
+      expect(product.category).to.equal(expectedCategory);
+    });
+  });
+  
+  test("All products are available", function() {
+    const products = res.getBody();
+    products.forEach(product => {
+      expect(product.is_available).to.be.true;
+    });
+  });
+}

@@ -1,0 +1,57 @@
+meta {
+  name: Delete Product
+  type: http
+  seq: 8
+}
+
+delete {
+  url: {{baseUrl}}/api/products/{{productId}}/
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+}
+
+docs {
+  # Delete Product
+  
+  Permanently deletes a product from the store.
+  
+  ## Parameters
+  - productId: Integer ID of the product to delete (from environment variable)
+  
+  ## Response
+  - 204 No Content on successful deletion
+  - 404 Not Found if product doesn't exist
+  
+  ## Warning
+  - This action is irreversible
+  - Product data will be permanently removed from database
+  - Associated S3 images will NOT be automatically deleted
+  - Consider manually cleaning up S3 images after deletion
+  
+  ## S3 Cleanup
+  After deleting a product, manually clean up S3 images:
+  ```bash
+  # List images for the deleted product
+  aws s3 ls s3://product-image-collection/{productId}/
+  
+  # Delete all images for the product
+  aws s3 rm s3://product-image-collection/{productId}/ --recursive
+  ```
+  
+  ## Alternative Approach
+  Instead of deletion, consider setting `is_available: false` to hide the product while preserving data.
+}
+
+tests {
+  test("Status code is 204", function() {
+    expect(res.getStatus()).to.equal(204);
+  });
+  
+  test("Response body is empty", function() {
+    expect(res.getBody()).to.be.empty;
+  });
+}

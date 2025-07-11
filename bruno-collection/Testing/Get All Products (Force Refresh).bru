@@ -1,0 +1,73 @@
+meta {
+  name: Get All Products (Force Refresh)
+  type: http
+  seq: 12
+}
+
+get {
+  url: {{baseUrl}}/api/products/?force_refresh=true
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+docs {
+  # Get All Products with Force Refresh
+  
+  Retrieves all products and forces a refresh of image data from S3, bypassing the cache.
+  
+  ## Query Parameters
+  - force_refresh: true/1/yes - Forces refresh of image data from S3
+  
+  ## Use Cases
+  - After uploading new images to S3
+  - When you need to see the latest image data immediately
+  - Debugging image display issues
+  - Admin operations that require fresh data
+  
+  ## Response
+  - Returns array of products with fresh presigned URLs
+  - Bypasses cache even if URLs haven't expired
+  - Images are fetched directly from S3
+  
+  ## Performance Note
+  - This bypasses the cache, so it may be slower
+  - Use sparingly in production
+  - Consider using only when necessary (after image uploads)
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Response is an array", function() {
+    expect(res.getBody()).to.be.an('array');
+  });
+  
+  test("Products have fresh image data", function() {
+    const products = res.getBody();
+    products.forEach(product => {
+      expect(product).to.have.property('images');
+      expect(product.images).to.be.an('array');
+      if (product.images.length > 0) {
+        const image = product.images[0];
+        expect(image).to.have.property('url');
+        expect(image).to.have.property('expires_at');
+        
+        // Check that the expiration time is fresh (created recently)
+        const expiresAt = new Date(image.expires_at);
+        const now = new Date();
+        const timeDiff = expiresAt.getTime() - now.getTime();
+        const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
+        
+        // Should be close to 1 hour from now (fresh URLs)
+        expect(timeDiff).to.be.greaterThan(oneHour - 60000); // Within 1 minute of 1 hour
+      }
+    });
+  });
+}

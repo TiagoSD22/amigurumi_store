@@ -1,0 +1,81 @@
+meta {
+  name: Partial Update Product (PATCH)
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{baseUrl}}/api/products/{{productId}}/
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+body:json {
+  {
+    "price": "29.99",
+    "is_featured": true
+  }
+}
+
+docs {
+  # Partial Update Product (PATCH)
+  
+  Updates specific fields of an existing product without affecting other fields.
+  
+  ## Parameters
+  - productId: Integer ID of the product to update (from environment variable)
+  
+  ## Request Body
+  Only include fields you want to update:
+  - name: String (optional)
+  - description: Text (optional)
+  - price: Decimal string (optional)
+  - category: Choice (optional)
+  - is_featured: Boolean (optional)
+  - is_available: Boolean (optional)
+  
+  ## Response
+  - Returns updated product object with all fields
+  - updated_at timestamp is automatically updated
+  - Other fields remain unchanged
+  
+  ## Common Use Cases
+  - Update only price during sales
+  - Toggle featured status
+  - Change availability status
+  - Update description without changing other details
+  
+  ## Notes
+  - More efficient than PUT for small changes
+  - Safer than PUT as it won't accidentally clear fields
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Updated fields are correct", function() {
+    const product = res.getBody();
+    expect(product.price).to.equal("29.99");
+    expect(product.is_featured).to.be.true;
+  });
+  
+  test("Product ID unchanged", function() {
+    const product = res.getBody();
+    const expectedId = parseInt(bru.getVar("productId"));
+    expect(product.id).to.equal(expectedId);
+  });
+  
+  test("Other fields preserved", function() {
+    const product = res.getBody();
+    expect(product).to.have.property('name');
+    expect(product).to.have.property('description');
+    expect(product).to.have.property('category');
+  });
+}

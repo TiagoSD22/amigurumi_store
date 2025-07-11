@@ -1,0 +1,103 @@
+{
+  "client": "bruno",
+  "version": "1",
+  "name": "Amigurumi Store Environments",
+  "environments": [
+    {
+      "uid": "local-dev",
+      "name": "Local Development",
+      "variables": [
+        {
+          "name": "baseUrl",
+          "value": "http://localhost:8000",
+          "type": "text",
+          "enabled": true
+        },
+        {
+          "name": "productId",
+          "value": "1",
+          "type": "text",
+          "enabled": true
+        },
+        {
+          "name": "category",
+          "value": "ANIMAL",
+          "type": "text",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "uid": "docker-dev",
+      "name": "Docker Development",
+      "variables": [
+        {
+          "name": "baseUrl",
+          "value": "http://localhost:8000",
+          "type": "text",
+          "enabled": true
+        },
+        {
+          "name": "productId",
+          "value": "1",
+          "type": "text",
+          "enabled": true
+        },
+        {
+          "name": "category",
+          "value": "ANIMAL",
+          "type": "text",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "uid": "demo",
+      "name": "Demo Environment",
+      "variables": [
+        {
+          "name": "baseUrl",
+          "value": "https://demo-api.amigurumi-store.com",
+          "type": "text",
+          "enabled": true
+        },
+        {
+          "name": "productId",
+          "value": "1",
+          "type": "text",
+          "enabled": true
+        },
+        {
+          "name": "category",
+          "value": "ANIMAL",
+          "type": "text",
+          "enabled": true
+        }
+      ]
+    },
+    {
+      "uid": "production",
+      "name": "Production",
+      "variables": [
+        {
+          "name": "baseUrl",
+          "value": "https://api.amigurumi-store.com",
+          "type": "text",
+          "enabled": true
+        },
+        {
+          "name": "productId",
+          "value": "1",
+          "type": "text",
+          "enabled": true
+        },
+        {
+          "name": "category",
+          "value": "ANIMAL",
+          "type": "text",
+          "enabled": true
+        }
+      ]
+    }
+  ]
+}

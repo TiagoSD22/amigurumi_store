@@ -1,0 +1,59 @@
+meta {
+  name: Get All Products
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/products/
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+docs {
+  # Get All Products
+  
+  Retrieves a list of all amigurumi products with their images from S3.
+  
+  ## Response
+  - Returns array of products with presigned URLs for images
+  - Each product includes: id, name, description, price, category, is_featured, is_available, images, primary_image
+  - Images field contains presigned URLs that expire after configured time (1 hour by default)
+  - If no images exist for a product, returns default image (image_not_found.png)
+  
+  ## Available Categories
+  - ANIMAL: Animal-themed amigurumi
+  - DOLL: Doll-style amigurumi  
+  - CHARACTER: Character-based amigurumi
+  - ACCESSORIES: Amigurumi accessories
+  - SEASONAL: Seasonal/holiday themed
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Response is an array", function() {
+    expect(res.getBody()).to.be.an('array');
+  });
+  
+  test("Products have required fields", function() {
+    const products = res.getBody();
+    if (products.length > 0) {
+      const product = products[0];
+      expect(product).to.have.property('id');
+      expect(product).to.have.property('name');
+      expect(product).to.have.property('description');
+      expect(product).to.have.property('price');
+      expect(product).to.have.property('category');
+      expect(product).to.have.property('images');
+      expect(product).to.have.property('primary_image');
+    }
+  });
+}

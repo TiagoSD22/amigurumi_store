@@ -1,0 +1,75 @@
+meta {
+  name: Test Category Filtering
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/products/category/ANIMAL/
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+docs {
+  # Test Category Filtering
+  
+  Tests the category filtering functionality across all available categories.
+  
+  ## Available Categories
+  - ANIMAL: Animal-themed amigurumi
+  - DOLL: Doll-style amigurumi  
+  - CHARACTER: Character-based amigurumi
+  - ACCESSORIES: Amigurumi accessories
+  - SEASONAL: Seasonal/holiday themed
+  
+  ## Test Sequence
+  This test runs for ANIMAL category. You can duplicate this request and change
+  the URL to test other categories:
+  - `/api/products/category/DOLL/`
+  - `/api/products/category/CHARACTER/`
+  - `/api/products/category/ACCESSORIES/`
+  - `/api/products/category/SEASONAL/`
+  
+  ## Expected Behavior
+  - Returns only products with the specified category
+  - All products should be available (is_available=true)
+  - Products should have complete image data
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Response is an array", function() {
+    expect(res.getBody()).to.be.an('array');
+  });
+  
+  test("All products have ANIMAL category", function() {
+    const products = res.getBody();
+    products.forEach(product => {
+      expect(product.category).to.equal('ANIMAL');
+    });
+  });
+  
+  test("All products are available", function() {
+    const products = res.getBody();
+    products.forEach(product => {
+      expect(product.is_available).to.be.true;
+    });
+  });
+  
+  test("Products have images", function() {
+    const products = res.getBody();
+    products.forEach(product => {
+      expect(product).to.have.property('images');
+      expect(product.images).to.be.an('array');
+      expect(product.images.length).to.be.greaterThan(0);
+    });
+  });
+}

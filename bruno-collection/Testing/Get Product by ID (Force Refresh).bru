@@ -1,0 +1,80 @@
+meta {
+  name: Get Product by ID (Force Refresh)
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/products/{{productId}}/?force_refresh=true
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+docs {
+  # Get Product by ID with Force Refresh
+  
+  Retrieves a specific product and forces a refresh of image data from S3.
+  
+  ## Parameters
+  - productId: Integer ID of the product
+  - force_refresh: true/1/yes - Forces refresh of image data from S3
+  
+  ## Use Cases
+  - Immediately after uploading new images for a specific product
+  - Testing image updates for a particular product
+  - Admin operations on specific products
+  - Verifying image changes took effect
+  
+  ## Example Workflow
+  1. Upload new images via script: `python upload_product_images_to_s3.py --product_id=1 --images="new_image.jpg"`
+  2. Call this endpoint to see the new images immediately
+  3. Verify the new images appear in the response
+  
+  ## Response
+  - Returns single product with fresh image data
+  - Bypasses cache for this specific product
+  - All images have fresh presigned URLs
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("Product has fresh image data", function() {
+    const product = res.getBody();
+    expect(product).to.have.property('images');
+    expect(product.images).to.be.an('array');
+    expect(product.images.length).to.be.greaterThan(0);
+    
+    // Test that images have fresh URLs
+    product.images.forEach(image => {
+      expect(image).to.have.property('url');
+      expect(image).to.have.property('expires_at');
+      expect(image).to.have.property('is_default');
+      
+      // Check expiration time is fresh
+      const expiresAt = new Date(image.expires_at);
+      const now = new Date();
+      const timeDiff = expiresAt.getTime() - now.getTime();
+      const oneHour = 60 * 60 * 1000;
+      
+      expect(timeDiff).to.be.greaterThan(oneHour - 60000);
+    });
+  });
+  
+  test("Primary image is refreshed", function() {
+    const product = res.getBody();
+    expect(product).to.have.property('primary_image');
+    
+    if (product.primary_image) {
+      expect(product.primary_image).to.have.property('url');
+      expect(product.primary_image).to.have.property('expires_at');
+    }
+  });
+}

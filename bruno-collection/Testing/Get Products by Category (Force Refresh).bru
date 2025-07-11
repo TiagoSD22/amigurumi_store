@@ -1,0 +1,62 @@
+meta {
+  name: Get Products by Category (Force Refresh)
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{baseUrl}}/api/products/category/{{category}}/?force_refresh=true
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Accept: application/json
+}
+
+docs {
+  # Get Products by Category with Force Refresh
+  
+  Retrieves products by category with forced image refresh from S3.
+  
+  ## Parameters
+  - category: Product category (ANIMAL, DOLL, CHARACTER, ACCESSORIES, SEASONAL)
+  - force_refresh: true/1/yes - Forces refresh of image data from S3
+  
+  ## Use Cases
+  - After uploading images for products in a specific category
+  - Category page refresh with latest images
+  - Bulk image updates for a product category
+  - Testing category-specific image changes
+  
+  ## Response
+  - Returns products in specified category with fresh image data
+  - All images bypassed cache and fetched from S3
+  - Useful for category page management
+}
+
+tests {
+  test("Status code is 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+  
+  test("All products have correct category and fresh images", function() {
+    const products = res.getBody();
+    const expectedCategory = bru.getVar("category");
+    
+    products.forEach(product => {
+      expect(product.category).to.equal(expectedCategory);
+      expect(product.is_available).to.be.true;
+      expect(product).to.have.property('images');
+      expect(product.images).to.be.an('array');
+      
+      // Verify fresh image data
+      if (product.images.length > 0) {
+        const image = product.images[0];
+        expect(image).to.have.property('url');
+        expect(image).to.have.property('expires_at');
+      }
+    });
+  });
+}
