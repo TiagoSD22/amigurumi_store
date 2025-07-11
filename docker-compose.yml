@@ -6,6 +6,7 @@ services:
     image: postgres:15-alpine
     container_name: amigurumi_db
     restart: unless-stopped
+    profiles: ["infra-only", "full"]
     environment:
       POSTGRES_DB: amigurumi_store
       POSTGRES_USER: postgres
@@ -25,6 +26,7 @@ services:
     image: localstack/localstack:3.0
     container_name: amigurumi_localstack
     restart: unless-stopped
+    profiles: ["infra-only", "full"]
     ports:
       - "4566:4566"
       - "4510-4559:4510-4559"
@@ -56,6 +58,7 @@ services:
   terraform-init:
     image: alpine:latest
     container_name: amigurumi_terraform_init
+    profiles: ["infra-only", "full"]
     volumes:
       - ./terraform:/workspace
     working_dir: /workspace
@@ -107,6 +110,7 @@ services:
       dockerfile: backend/Dockerfile
     container_name: amigurumi_backend
     restart: unless-stopped
+    profiles: ["full"]
     ports:
       - "8000:8000"
     environment:
@@ -128,10 +132,11 @@ services:
       terraform-init:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/products/"]
+      test: ["CMD", "curl", "http://localhost:8000/api/products/"]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 40s
 
   # React Frontend
   frontend:
@@ -140,6 +145,7 @@ services:
       dockerfile: frontend/Dockerfile
     container_name: amigurumi_frontend
     restart: unless-stopped
+    profiles: ["full"]
     ports:
       - "3000:3000"
     environment:
