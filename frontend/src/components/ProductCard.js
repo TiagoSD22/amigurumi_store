@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './ProductCard.css';
 
 const ProductCard = ({ product }) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
   const formatPrice = (price) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -21,17 +23,111 @@ const ProductCard = ({ product }) => {
     return icons[category] || '🧸';
   };
 
+  // Get current image from the images array
+  const getCurrentImage = () => {
+    if (!product.images || product.images.length === 0) {
+      return null;
+    }
+    return product.images[currentImageIndex];
+  };
+
+  // Navigate to previous image
+  const goToPreviousImage = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (product.images && product.images.length > 1) {
+      setCurrentImageIndex((prevIndex) => 
+        prevIndex === 0 ? product.images.length - 1 : prevIndex - 1
+      );
+    }
+  };
+
+  // Navigate to next image
+  const goToNextImage = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (product.images && product.images.length > 1) {
+      setCurrentImageIndex((prevIndex) => 
+        prevIndex === product.images.length - 1 ? 0 : prevIndex + 1
+      );
+    }
+  };
+
+  // Handle image load error
+  const handleImageError = (e) => {
+    console.error('Failed to load image:', e.target.src);
+    // You could set a fallback image here if needed
+  };
+
+  const currentImage = getCurrentImage();
+  const hasMultipleImages = product.images && product.images.length > 1;
+
   return (
     <div className="product-card">
       <div className="product-image-container">
-        <img 
-          src={product.image} 
-          alt={product.name}
-          className="product-image"
-          loading="lazy"
-        />
+        {currentImage ? (
+          <>
+            <img 
+              src={currentImage.url} 
+              alt={`${product.name} - ${currentImage.filename}`}
+              className="product-image"
+              loading="lazy"
+              onError={handleImageError}
+            />
+            
+            {/* Navigation arrows - only show if multiple images */}
+            {hasMultipleImages && (
+              <div className="image-navigation">
+                <button 
+                  className="nav-button nav-left" 
+                  onClick={goToPreviousImage}
+                  aria-label="Previous Image"
+                  title="Previous Image"
+                >
+                  ◀
+                </button>
+                <button 
+                  className="nav-button nav-right" 
+                  onClick={goToNextImage}
+                  aria-label="Next Image"
+                  title="Next Image"
+                >
+                  ▶
+                </button>
+              </div>
+            )}
+            
+            {/* Image indicators - only show if multiple images */}
+            {hasMultipleImages && (
+              <div className="image-indicators">
+                {product.images.map((_, index) => (
+                  <button
+                    key={index}
+                    className={`indicator ${index === currentImageIndex ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setCurrentImageIndex(index);
+                    }}
+                    aria-label={`Go to image ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="no-image-placeholder">
+            <span className="no-image-icon">🖼️</span>
+            <span className="no-image-text">No Image Available</span>
+          </div>
+        )}
+        
         {product.is_featured && (
           <span className="featured-badge">⭐ Featured</span>
+        )}
+        
+        {currentImage && currentImage.is_default && (
+          <span className="default-image-badge">📷 Default</span>
         )}
       </div>
       
@@ -58,6 +154,15 @@ const ProductCard = ({ product }) => {
             View Details
           </Link>
         </div>
+        
+        {/* Image count badge */}
+        {hasMultipleImages && (
+          <div className="image-count">
+            <span className="count-text">
+              {currentImageIndex + 1} of {product.images.length} images
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );
