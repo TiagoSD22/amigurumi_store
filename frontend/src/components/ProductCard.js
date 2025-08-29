@@ -53,6 +53,34 @@ const ProductCard = ({ product }) => {
     }
   };
 
+  // Handle image load and adjust fit based on aspect ratio
+  const handleImageLoad = (e) => {
+    const img = e.target;
+    const imageAspectRatio = img.naturalWidth / img.naturalHeight;
+    
+    // Debug logging
+    console.log(`Image: ${img.alt}, Aspect Ratio: ${imageAspectRatio.toFixed(2)}, Natural Size: ${img.naturalWidth}x${img.naturalHeight}`);
+    
+    // Remove existing aspect ratio classes
+    img.classList.remove('landscape', 'portrait', 'square');
+    
+    // Add appropriate class based on aspect ratio
+    // More aggressive thresholds to handle problematic images
+    if (imageAspectRatio > 1.1) {
+      // Any image wider than 1.1:1 ratio gets cover treatment
+      img.classList.add('landscape');
+      console.log(`Applied landscape class to: ${img.alt}`);
+    } else if (imageAspectRatio < 0.9) {
+      // Tall images get contain treatment
+      img.classList.add('portrait');
+      console.log(`Applied portrait class to: ${img.alt}`);
+    } else {
+      // Square-ish images get cover treatment for consistency
+      img.classList.add('square');
+      console.log(`Applied square class to: ${img.alt}`);
+    }
+  };
+
   // Handle image load error
   const handleImageError = (e) => {
     console.error('Failed to load image:', e.target.src);
@@ -72,6 +100,7 @@ const ProductCard = ({ product }) => {
               alt={`${product.name} - ${currentImage.filename}`}
               className="product-image"
               loading="lazy"
+              onLoad={handleImageLoad}
               onError={handleImageError}
             />
             
