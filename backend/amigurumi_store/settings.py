@@ -84,7 +84,7 @@ DATABASES = {
         'NAME': os.environ.get('POSTGRES_DB', 'amigurumi_store'),
         'USER': os.environ.get('POSTGRES_USER', 'postgres'),
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'postgres'),
-        'HOST': os.environ.get('POSTGRES_HOST', 'db'),
+        'HOST': os.environ.get('', 'localhost'),
         'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
 }
@@ -206,16 +206,3 @@ if os.environ.get('DOCKER_ENV'):
         "http://frontend:3000",
         "http://localhost:3000",
     ]
-
-# Cache configuration
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
-    }
-}
-
-# S3 Image Service settings
-S3_PRESIGNED_URL_CACHE_TIMEOUT = 3600  # 1 hour
-S3_PRESIGNED_URL_EXPIRATION = 3600  # 1 hour
-S3_DEFAULT_IMAGE_KEY = 'image_not_found.png'  # Default image in bucket root
